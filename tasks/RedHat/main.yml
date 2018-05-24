@@ -1,0 +1,74 @@
+- name: Install elasticsearch packages
+  become: yes
+  yum: name={{ item }} state=installed
+  with_items:
+    - java-1.8.0-openjdk
+    - java-1.8.0-openjdk-devel
+
+- name: GPG-KEY-elasticsearch installed
+  rpm_key:
+    key: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+
+- name: Set template elasticsearch.repo
+  become: yes
+  template: src=elasticsearch.repo.j2 dest=/etc/yum.repos.d/elasticsearch.repo owner={{ user.name }} group={{ user.name }} mode="u=rw,g=r,o=r"
+
+- name: Install elasticsearch
+  become: yes
+  yum: name={{ item }} state=installed
+  with_items:
+    - elasticsearch
+
+- name: install elasticsearch-plugin
+  command: /usr/share/elasticsearch/bin/elasticsearch-plugin install {{ item }}
+  with_items:
+    - analysis-icu
+    - analysis-kuromoji
+    - repository-s3
+    - discovery-ec2
+  notify: restart elasticsearch
+  ignore_errors: True
+
+# - name: ElasticSearch configure
+#   template: src=elasticsearch.yml.j2 dest=/etc/elasticsearch/elasticsearch.yml
+#   notify: restart elasticsearch
+- name: ElasticSearch configure
+  lineinfile:
+    dest=/etc/elasticsearch/elasticsearch.yml
+    line='network.host{{ colon }} 0.0.0.0'
+    insertbefore=BOF state=present
+
+- name: ElasticSearch configure
+  lineinfile:
+    dest=/etc/elasticsearch/elasticsearch.yml
+    line='http.cors.enabled{{ colon }} true'
+    state=present
+
+- name: ElasticSearch configure
+  lineinfile:
+    dest=/etc/elasticsearch/elasticsearch.yml
+    line='http.cors.allow-origin{{ colon }} "*"'
+    state=present
+
+
+
+- name: ElasticSearch configure
+  replace:
+    dest=/etc/elasticsearch/jvm.options
+    replace="-Xms1g"
+    regexp='^-Xms2g$'
+
+- name: ElasticSearch configure
+  replace:
+    dest=/etc/elasticsearch/jvm.options
+    replace="-Xmx1g"
+    regexp='^-Xmx2g$'
+
+
+- name: put elasticsearch dictionary file
+  command: touch /etc/elasticsearch/{{ item }}
+  with_items:
+    - jinmei_dictionary.txt
+    - dictionary.txt
+    - synonym.txt
+  notify: restart elasticsearch

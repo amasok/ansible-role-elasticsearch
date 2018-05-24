@@ -1,0 +1,15 @@
+network.host: 0.0.0.0
+cluster.name: {{ es.clustername }}
+node.name: "{{ es.inventory_hostname_short }}"
+discovery.zen.ping.multicast.enabled: false
+
+script.inline: on
+
+node.master: {{ es.ismaster }}
+node.data: {{ es.isdata }}
+
+path.data: /var/lib/elasticsearch
+path.logs: /var/log/elasticsearch
+
+http.cors.allow-origin: "*"
+http.cors.enabled: true

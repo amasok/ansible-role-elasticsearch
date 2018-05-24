@@ -1,0 +1,13 @@
+---
+# handlers file for ansible-role-elasticsearch
+- name: restart elasticsearch
+  systemd:
+    name: elasticsearch
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+  become: yes
+
+- name: reload sysctl
+  command: sysctl -p
+  ignore_errors: True

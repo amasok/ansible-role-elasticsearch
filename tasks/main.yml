@@ -1,0 +1,6 @@
+---
+# tasks file for ansible-role-elasticsearch
+
+# (setup)  specific tasks
+- include: "RedHat/main.yml"
+  when: ansible_os_family == 'RedHat'
